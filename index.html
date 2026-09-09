@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gestión de Libros - Librería Milenium</title>
+  
+  <!-- FAVICON -->
+  <link rel="icon" type="image/png" href="https://i.postimg.cc/ZYGd9Hh8/l-OGO-TERMINADO.png">
+  
+  <!-- ENLACES A RECURSOS EXTERNOS -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,600;0,700;1,400&display=swap" rel="stylesheet">
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+
+  <style>
+    :root {
+      --color-primario: #1e3c72;     
+      --color-secundario: #2a5298;   
+      --bg-admin-card: #f8fafc;      
+      --border-color: #e2e8f0;       
+      --bg-body: linear-gradient(135deg, #fbfbf9 0%, #f0f4f8 100%);
+      --text-main: #2c3e50;
+      --card-bg: rgba(255, 255, 255, 0.9);
+      --input-bg: #ffffff;
+      --text-muted: #64748b;
+      --shadow-sm: 0 2px 4px rgba(0,0,0,0.05);
+      --shadow-md: 0 10px 15px -3px rgba(0,0,0,0.05), 0 4px 6px -2px rgba(0,0,0,0.05);
+      --shadow-lg: 0 20px 25px -5px rgba(0,0,0,0.08), 0 10px 10px -5px rgba(0,0,0,0.04);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg-body);
+      color: var(--text-main);
+      line-height: 1.6;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    /* CONTENEDOR DE LOGIN */
+    #login-container {
+      background: var(--card-bg);
+      padding: 2.5rem;
+      border-radius: 20px;
+      border: 1px solid var(--border-color);
+      box-shadow: var(--shadow-lg);
+      width: 100%;
+      max-width: 400px;
+      text-align: center;
+    }
+
+    #login-container img {
+      height: 70px;
+      margin-bottom: 1rem;
+      background: rgba(255, 255, 255, 0.12);
+      padding: 6px;
+      border-radius: 8px;
+    }
+
+    #login-container h2 {
+      font-family: 'Playfair Display', serif;
+      color: var(--color-primario);
+      margin-bottom: 1.5rem;
+      font-size: 1.8rem;
+    }
+
+    .login-form input {
+      width: 100%;
+      padding: 0.8rem 1rem;
+      margin-bottom: 1rem;
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      background: var(--input-bg);
+      color: var(--text-main);
+      font-size: 1rem;
+    }
+
+    .login-form button {
+      width: 100%;
+      background: var(--color-primario);
+      color: white;
+      border: none;
+      padding: 0.8rem;
+      border-radius: 10px;
+      font-weight: 600;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .login-form button:hover {
+      background: var(--color-secundario);
+    }
+
+    /* PANEL DE ADMINISTRACIÓN (Oculto hasta iniciar sesión) */
+    #admin-panel {
+      display: none;
+      background: var(--input-bg);
+      color: var(--text-main);
+      padding: 2rem;
+      border-radius: 24px;
+      width: 94%;
+      max-width: 1000px;
+      max-height: 90vh;
+      overflow-y: auto;
+      border: 1px solid var(--border-color);
+      box-shadow: var(--shadow-lg);
+      margin: 2rem auto;
+    }
+    
+    .panel-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--border-color); padding-bottom: 1rem; margin-bottom: 1.2rem; }
+    .panel-header h3 { font-family: 'Playfair Display', serif; color: var(--color-primario); font-size: 1.8rem; }
+    
+    .logout-panel-btn { background: #fee2e2; border: 1px solid #fca5a5; font-size: 0.85rem; color: #b91c1c; cursor: pointer; padding: 0.4rem 0.9rem; border-radius: 30px; font-weight: 600; display: flex; align-items: center; gap: 5px; }
+
+    .admin-stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
+    .stat-box { background: var(--bg-admin-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 0.8rem; text-align: center; }
+    .stat-number { font-size: 1.4rem; font-weight: 700; color: var(--color-primario); }
+    .stat-label { font-size: 0.72rem; color: var(--text-muted); font-weight: 600; margin-top: 2px; }
+
+    .admin-card { background: var(--bg-admin-card); border: 1px solid var(--border-color); padding: 1.5rem; border-radius: 16px; margin-bottom: 1.5rem; }
+    .admin-card-title { font-size: 1.05rem; font-weight: 700; margin-bottom: 1rem; display: flex; align-items: center; justify-content: space-between; width: 100%; }
+
+    .admin-form label { display: block; font-size: 0.8rem; font-weight: 600; color: var(--text-muted); margin-bottom: 0.3rem; text-transform: uppercase; }
+    .admin-form input, .admin-form select, .admin-form textarea { width: 100%; padding: 0.65rem 0.9rem; margin-bottom: 1rem; border: 1px solid var(--border-color); border-radius: 10px; background: var(--input-bg); color: var(--text-main); font-size: 0.9rem; }
+
+    .btn-ai-autofill {
+      background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); color: white; border: none;
+      padding: 0.65rem 1.1rem; border-radius: 10px; font-weight: 600; font-size: 0.85rem; cursor: pointer;
+      display: flex; align-items: center; gap: 8px; margin-bottom: 1rem; transition: opacity 0.2s;
+    }
+    .btn-ai-autofill:hover { opacity: 0.9; }
+
+    .form-img-preview-container { display: flex; gap: 1.5rem; align-items: flex-start; }
+    .form-inputs-side { flex: 2; }
+    .live-preview-box { flex: 0.8; height: 210px; border: 2px dashed var(--border-color); border-radius: 12px; display: flex; align-items: center; justify-content: center; overflow: hidden; background: var(--input-bg); padding: 6px; }
+    .live-preview-box img { max-width: 100%; max-height: 100%; object-fit: contain; }
+
+    .form-row { display: flex; gap: 1rem; }
+    .form-row > div { flex: 1; }
+
+    .admin-action-btn-row { display: flex; gap: 10px; }
+    button.btn-primary { background: var(--color-primario); color: white; border: none; padding: 0.85rem 1.5rem; border-radius: 10px; font-weight: 600; font-size: 0.95rem; cursor: pointer; flex: 2; }
+
+    /* TABLA DE GESTIÓN */
+    .admin-table-controls { display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin-bottom: 0.8rem; }
+    .admin-table-search { position: relative; flex-grow: 1; max-width: 350px; }
+    .admin-table-search input { width: 100%; padding: 0.5rem 1rem 0.5rem 2.2rem; border-radius: 20px; border: 1px solid var(--border-color); background: var(--input-bg); color: var(--text-main); font-size: 0.85rem; }
+    .admin-table-search i { position: absolute; left: 0.8rem; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 0.8rem; }
+
+    .table-container { max-height: 380px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 12px; }
+    .management-table { width: 100%; border-collapse: collapse; background: var(--input-bg); color: var(--text-main); font-size: 0.83rem; }
+    .management-table th { position: sticky; top: 0; background: var(--bg-admin-card); color: var(--text-muted); font-weight: 700; padding: 0.6rem 0.8rem; border-bottom: 2px solid var(--border-color); z-index: 5; text-align: left; }
+    .management-table td { padding: 0.45rem 0.8rem; border-bottom: 1px solid var(--border-color); vertical-align: middle; }
+    
+    .tbl-thumb { width: 32px; height: 45px; object-fit: contain; background: transparent; border-radius: 4px; padding: 2px; }
+    .tbl-badge { padding: 2px 8px; border-radius: 12px; font-size: 0.72rem; font-weight: 600; }
+    .tbl-badge.disp { background: #d1fae5; color: #047857; }
+    .tbl-badge.agot { background: #fee2e2; color: #b91c1c; }
+
+    .action-btns button { border: none; padding: 0.3rem 0.6rem; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.75rem; }
+    .toggle-disp-btn { background: #e0e7ff; color: #3730a3; margin-right: 0.2rem; }
+    .edit-btn { background: #e0f2fe; color: #0369a1; margin-right: 0.2rem; }
+    .delete-btn { background: #fee2e2; color: #b91c1c; }
+
+    /* TOAST NOTIFICATIONS */
+    #toast-container { position: fixed; bottom: 2.5rem; right: 2.5rem; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
+    .toast { background: #1e293b; color: white; padding: 1rem 1.5rem; border-radius: 12px; font-weight: 500; font-size: 0.9rem; box-shadow: var(--shadow-lg); display: flex; align-items: center; gap: 10px; border-left: 4px solid var(--color-secundario); }
+
+    @media (max-width: 768px) {
+      .form-row, .form-img-preview-container { flex-direction: column; }
+      .admin-stats-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="toast-container"></div>
+  
+  <!-- INTERFAZ DE INICIO DE SESIÓN -->
+  <div id="login-container">
+    <img src="https://i.postimg.cc/ZYGd9Hh8/l-OGO-TERMINADO.png" alt="Logo">
+    <h2>Iniciar Sesión</h2>
+    <form class="login-form" onsubmit="verificarLogin(event)">
+      <input type="password" id="login-password" placeholder="Contraseña de acceso" required>
+      <button type="submit">Entrar al Administrador</button>
+    </form>
+  </div>
+
+  <!-- PANEL DE ADMINISTRACIÓN -->
+  <div id="admin-panel">
+    <div class="panel-header">
+      <h3>Panel de Gestión de Libros</h3>
+      <button class="logout-panel-btn" onclick="cerrarSesionAdmin()"><i class="fa-solid fa-lock"></i> Cerrar Sesión</button>
+    </div>
+
+    <!-- ESTADÍSTICAS REAL-TIME -->
+    <div class="admin-stats-grid">
+      <div class="stat-box"><div class="stat-number" id="stat-total">0</div><div class="stat-label">Total Libros</div></div>
+      <div class="stat-box"><div class="stat-number" id="stat-disp">0</div><div class="stat-label">Disponibles</div></div>
+      <div class="stat-box"><div class="stat-number" id="stat-agot">0</div><div class="stat-label">Agotados</div></div>
+      <div class="stat-box"><div class="stat-number" id="stat-desc">0</div><div class="stat-label">Descontinuados</div></div>
+    </div>
+
+    <div class="admin-card">
+      <div class="admin-card-title">
+        <span id="panel-title"><i class="fa-solid fa-plus-circle"></i> Agregar Nuevo Libro</span>
+      </div>
+      
+      <form class="admin-form" id="book-form" onsubmit="guardarLibro(event)">
+        <input type="hidden" id="edit-idFirebase" value="">
+        
+        <div class="form-row">
+          <div>
+            <label>Título del Libro</label>
+            <input type="text" id="form-titulo" required>
+          </div>
+          <div>
+            <label>Autor</label>
+            <input type="text" id="form-autor" required>
+          </div>
+        </div>
+
+        <button type="button" class="btn-ai-autofill" onclick="autocompletarLibroIA()">
+          <i class="fa-solid fa-wand-magic-sparkles"></i> Buscar y Auto-completar datos con IA
+        </button>
+
+        <div class="form-img-preview-container">
+          <div class="form-inputs-side">
+            <label>URL de la Imagen Portada</label>
+            <input type="url" id="form-imagen" oninput="actualizarLivePreview(this.value)" required>
+            
+            <div class="form-row">
+              <div>
+                <label>Categoría Principal</label>
+                <input type="text" id="form-categoria" placeholder="ej. Fantasía" required>
+              </div>
+              <div>
+                <label>Categoría Secundaria (Opcional)</label>
+                <input type="text" id="form-categoria2" placeholder="ej. Romántica">
+              </div>
+            </div>
+          </div>
+          <div class="live-preview-box">
+            <img id="form-live-img" src="https://via.placeholder.com/140x200?text=Sin+Portada" alt="Vista Previa">
+          </div>
+        </div>
+
+        <label>Resumen / Descripción Corta</label>
+        <textarea id="form-resumen" rows="2"></textarea>
+        
+        <div class="form-row">
+          <div>
+            <label>Precio ($)</label>
+            <input type="number" id="form-precio" required>
+          </div>
+          <div>
+            <label>Disponibilidad</label>
+            <select id="form-disponible">
+              <option value="true">Disponible</option>
+              <option value="false">Agotado</option>
+              <option value="discontinued">Descontinuado</option>
+            </select>
+          </div>
+        </div>
+        
+        <div class="admin-action-btn-row">
+          <button type="submit" class="btn-primary" id="submit-form-btn">Guardar Libro en Catálogo</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- INVENTARIO CON BUSCADOR INTERNO -->
+    <div class="management-section">
+      <div class="admin-table-controls">
+        <h4><i class="fa-solid fa-list-check"></i> Inventario (<span id="count-tabla-admin">0</span>)</h4>
+        <div class="admin-table-search">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="text" id="search-admin-table" placeholder="Filtrar en inventario..." oninput="filtrarTablaAdmin(this.value)">
+        </div>
+      </div>
+
+      <div class="table-container">
+        <table class="management-table">
+          <thead>
+            <tr><th>Portada</th><th>Título</th><th>Autor</th><th>Precio</th><th>Estado</th><th>Acciones</th></tr>
+          </thead>
+          <tbody id="management-table-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const ADMIN_PASSWORD = "Libreria2026";[cite: 1]
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDkxZO_rT-_3yy1JdekkQmiStQNkqzwGYI",
+      authDomain: "libreria-milenium.firebaseapp.com",
+      databaseURL: "https://libreria-milenium-default-rtdb.firebaseio.com",
+      projectId: "libreria-milenium",
+      storageBucket: "libreria-milenium.firebasestorage.app",
+      messagingSenderId: "691981895582",
+      appId: "1:691981895582:web:b3af21222d14f7e8af788f",
+      measurementId: "G-0BW3PRC67M"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    let misLibros = [];
+    let adminAutenticado = false;
+
+    function lanzarToast(mensaje) {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      toast.className = 'toast';
+      toast.innerHTML = `<i class="fa-solid fa-circle-info"></i> <span>${mensaje}</span>`;
+      container.appendChild(toast);
+      setTimeout(() => { toast.remove(); }, 3500);
+    }
+
+    function verificarLogin(event) {
+      event.preventDefault();
+      const pass = document.getElementById('login-password').value;
+      if (pass === ADMIN_PASSWORD) {
+        adminAutenticado = true;
+        document.getElementById('login-container').style.display = 'none';
+        document.getElementById('admin-panel').style.display = 'block';
+        document.body.style.alignItems = 'flex-start';
+        conectarBaseDeDatos();
+        lanzarToast("Bienvenido al panel de administración");
+      } else {
+        lanzarToast("Contraseña incorrecta");
+      }
+    }
+
+    function cerrarSesionAdmin() {
+      adminAutenticado = false;
+      document.getElementById('admin-panel').style.display = 'none';
+      document.getElementById('login-container').style.display = 'block';
+      document.getElementById('login-password').value = "";
+      document.body.style.alignItems = 'center';
+      lanzarToast("Sesión cerrada");
+    }
+
+    function conectarBaseDeDatos() {
+      db.ref('libros').on('value', (snapshot) => {
+        const data = snapshot.val();
+        misLibros = [];
+        if (data) {
+          Object.keys(data).forEach(key => {
+            misLibros.push({ idFirebase: key, ...data[key] });
+          });
+        }
+        calcularEstadisticasAdmin();
+        renderizarTablaAdmin();
+      });
+    }
+
+    function calcularEstadisticasAdmin() {
+      let total = misLibros.length;
+      let disponibles = 0; let agotados = 0; let descontinuados = 0;
+
+      misLibros.forEach(l => {
+        if(l.available === "discontinued") descontinuados++;
+        else if(l.available === false || l.available === "false") agotados++;
+        else disponibles++;
+      });
+
+      document.getElementById('stat-total').innerText = total;
+      document.getElementById('stat-disp').innerText = disponibles;
+      document.getElementById('stat-agot').innerText = agotados;
+      document.getElementById('stat-desc').innerText = descontinuados;
+    }
+
+    function actualizarLivePreview(url) {
+      const img = document.getElementById('form-live-img');
+      img.src = url ? url : "https://via.placeholder.com/140x200?text=Sin+Portada";
+    }
+
+    function autocompletarLibroIA() {
+      const titulo = document.getElementById('form-titulo').value.trim();
+      const autor = document.getElementById('form-autor').value.trim();
+
+      if (!titulo) {
+        lanzarToast("Escribe al menos el título para buscar datos.");
+        return;
+      }
+
+      lanzarToast("🔍 Obteniendo información...");
+      const query = encodeURIComponent(`${titulo} ${autor}`);
+      
+      fetch(`https://www.googleapis.com/books/v1/volumes?q=${query}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.items && data.items.length > 0) {
+            const info = data.items[0].volumeInfo;
+            
+            if (info.description) document.getElementById('form-resumen').value = info.description;
+            if (info.categories && info.categories.length > 0) {
+              const cats = info.categories[0].split('/');
+              document.getElementById('form-categoria').value = cats[0].trim();
+              if (cats[1]) document.getElementById('form-categoria2').value = cats[1].trim();
+            }
+
+            if (info.imageLinks) {
+              const imgUrl = info.imageLinks.thumbnail || info.imageLinks.smallThumbnail;
+              const imgHD = imgUrl.replace('http:', 'https:').replace('&edge=curl', '');
+              document.getElementById('form-imagen').value = imgHD;
+              actualizarLivePreview(imgHD);
+            }
+
+            lanzarToast("✨ Datos auto-completados exitosamente");
+          } else {
+            lanzarToast("No se halló información automática.");
+          }
+        })
+        .catch(() => lanzarToast("Error de conexión al buscar datos."));
+    }
+
+    function filtrarTablaAdmin(texto) {
+      renderizarTablaAdmin(texto.toLowerCase().trim());
+    }
+
+    function renderizarTablaAdmin(filtroTexto = "") {
+      const tbody = document.getElementById('management-table-body');
+      tbody.innerHTML = "";
+
+      let listaMostrar = misLibros.filter(l => 
+        l.titulo.toLowerCase().includes(filtroTexto) || 
+        l.autor.toLowerCase().includes(filtroTexto)
+      );
+
+      document.getElementById('count-tabla-admin').innerText = listaMostrar.length;
+
+      listaMostrar.forEach((libro) => {
+        const indexOriginal = misLibros.findIndex(m => m.idFirebase === libro.idFirebase);
+        
+        let estaDisponible = libro.available === true || libro.available === "true";
+        let badgeHtml = estaDisponible 
+          ? `<span class="tbl-badge disp">Disponible</span>` 
+          : `<span class="tbl-badge agot">Agotado</span>`;
+
+        tbody.innerHTML += `
+          <tr>
+            <td><img src="${libro.imagen}" class="tbl-thumb"></td>
+            <td><strong>${libro.titulo}</strong></td>
+            <td>${libro.autor}</td>
+            <td>$${libro.precio}</td>
+            <td>${badgeHtml}</td>
+            <td class="action-btns">
+              <button class="toggle-disp-btn" title="Cambiar Estado Rápido" onclick="conmutarEstadoRapido('${libro.idFirebase}', ${estaDisponible})"><i class="fa-solid fa-arrows-rotate"></i></button>
+              <button class="edit-btn" onclick="cargarLibroEnFormulario(${indexOriginal})"><i class="fa-solid fa-pen"></i></button>
+              <button class="delete-btn" onclick="eliminarLibro('${libro.idFirebase}', '${libro.titulo}')"><i class="fa-solid fa-trash"></i></button>
+            </td>
+          </tr>`;
+      });
+    }
+
+    function conmutarEstadoRapido(idFirebase, estadoActual) {
+      if(!adminAutenticado) return;
+      db.ref('libros/' + idFirebase + '/available').set(!estadoActual).then(() => {
+        lanzarToast("Estado actualizado correctamente");
+      });
+    }
+
+    function guardarLibro(event) {
+      event.preventDefault();
+      if(!adminAutenticado) return;
+      const idFirebase = document.getElementById('edit-idFirebase').value;
+      
+      const valorDisp = document.getElementById('form-disponible').value;
+      let valorGuardarDisp = valorDisp;
+      if (valorDisp === "true") valorGuardarDisp = true;
+      if (valorDisp === "false") valorGuardarDisp = false;
+
+      const nuevoLibro = {
+        titulo: document.getElementById('form-titulo').value,
+        autor: document.getElementById('form-autor').value,
+        imagen: document.getElementById('form-imagen').value,
+        resumen: document.getElementById('form-resumen').value,
+        precio: parseFloat(document.getElementById('form-precio').value),
+        categoria: document.getElementById('form-categoria').value,
+        categoria2: document.getElementById('form-categoria2').value || "",
+        available: valorGuardarDisp
+      };
+
+      if (idFirebase === "") {
+        db.ref('libros').push(nuevoLibro).then(() => {
+          limpiarFormulario();
+          lanzarToast("Nuevo libro agregado");
+        });
+      } else {
+        db.ref('libros/' + idFirebase).set(nuevoLibro).then(() => {
+          limpiarFormulario();
+          lanzarToast("Registro de libro modificado");
+        });
+      }
+    }
+
+    function cargarLibroEnFormulario(index) {
+      const libro = misLibros[index];
+      document.getElementById('edit-idFirebase').value = libro.idFirebase;
+      document.getElementById('form-titulo').value = libro.titulo;
+      document.getElementById('form-autor').value = libro.autor;
+      document.getElementById('form-imagen').value = libro.imagen;
+      document.getElementById('form-live-img').src = libro.imagen;
+      document.getElementById('form-resumen').value = libro.resumen;
+      document.getElementById('form-precio').value = libro.precio;
+      document.getElementById('form-categoria').value = libro.categoria;
+      document.getElementById('form-categoria2').value = libro.categoria2 || "";
+      
+      document.getElementById('panel-title').innerHTML = `<i class="fa-solid fa-pen-to-square"></i> Editando: ${libro.titulo}`;
+
+      if (libro.available === true || libro.available === "true") {
+        document.getElementById('form-disponible').value = "true";
+      } else if (libro.available === false || libro.available === "false") {
+        document.getElementById('form-disponible').value = "false";
+      } else {
+        document.getElementById('form-disponible').value = libro.available; 
+      }
+      
+      document.getElementById('admin-panel').scrollTo({top: 0, behavior: 'smooth'});
+    }
+
+    function limpiarFormulario() {
+      document.getElementById('book-form').reset(); 
+      document.getElementById('edit-idFirebase').value = ""; 
+      document.getElementById('form-live-img').src = "https://via.placeholder.com/140x200?text=Sin+Portada";
+      document.getElementById('panel-title').innerHTML = `<i class="fa-solid fa-plus-circle"></i> Agregar Nuevo Libro`;
+    }
+
+    function eliminarLibro(idFirebase, titulo) {
+      if(!adminAutenticado) return;
+      if(confirm(`¿Eliminar permanentemente "${titulo}"?`)) {
+        db.ref('libros/' + idFirebase).remove().then(() => {
+          lanzarToast(`"${titulo}" fue removido`);
+        });
+      }
+    }
+  </script>
+</body>
+</html>
