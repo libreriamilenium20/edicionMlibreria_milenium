@@ -1,271 +1,399 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Gestión de Libros - Librería Milenium</title>
-  
-  <!-- FAVICON -->
-  <link rel="icon" type="image/png" href="https://i.postimg.cc/ZYGd9Hh8/l-OGO-TERMINADO.png">
-  
-  <!-- ENLACES A RECURSOS EXTERNOS -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panel de Administración - Librería Milenium</title>
+  <!-- FontAwesome e Iconos -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,600;0,700;1,400&display=swap" rel="stylesheet">
-
-  <!-- Firebase -->
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
-
   <style>
     :root {
-      --color-primario: #1e3c72;     
-      --color-secundario: #2a5298;   
-      --bg-admin-card: #f8fafc;      
-      --border-color: #e2e8f0;       
-      --bg-body: linear-gradient(135deg, #fbfbf9 0%, #f0f4f8 100%);
-      --text-main: #2c3e50;
-      --card-bg: rgba(255, 255, 255, 0.9);
-      --input-bg: #ffffff;
-      --text-muted: #64748b;
-      --shadow-sm: 0 2px 4px rgba(0,0,0,0.05);
-      --shadow-md: 0 10px 15px -3px rgba(0,0,0,0.05), 0 4px 6px -2px rgba(0,0,0,0.05);
-      --shadow-lg: 0 20px 25px -5px rgba(0,0,0,0.08), 0 10px 10px -5px rgba(0,0,0,0.04);
+      --primary-color: #2c3e50;
+      --accent-color: #e67e22;
+      --bg-color: #f4f6f9;
+      --card-bg: #ffffff;
+      --text-color: #333333;
+      --border-color: #dcdde1;
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
 
     body {
-      font-family: 'Inter', sans-serif;
-      background: var(--bg-body);
-      color: var(--text-main);
-      line-height: 1.6;
+      background-color: var(--bg-color);
+      color: var(--text-color);
       min-height: 100vh;
       display: flex;
-      justify-content: center;
+      flex-direction: column;
       align-items: center;
+      justify-content: center;
+      padding: 20px;
     }
 
-    /* CONTENEDOR DE LOGIN */
+    /* Contenedor de Login */
     #login-container {
       background: var(--card-bg);
-      padding: 2.5rem;
-      border-radius: 20px;
-      border: 1px solid var(--border-color);
-      box-shadow: var(--shadow-lg);
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
       width: 100%;
       max-width: 400px;
       text-align: center;
     }
 
-    #login-container img {
-      height: 70px;
-      margin-bottom: 1rem;
-      background: rgba(255, 255, 255, 0.12);
-      padding: 6px;
-      border-radius: 8px;
-    }
-
     #login-container h2 {
-      font-family: 'Playfair Display', serif;
-      color: var(--color-primario);
-      margin-bottom: 1.5rem;
-      font-size: 1.8rem;
+      margin-bottom: 20px;
+      color: var(--primary-color);
     }
 
-    .login-form input {
+    .form-group {
+      margin-bottom: 20px;
+      text-align: left;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    .form-group input, .form-group textarea, .form-group select {
       width: 100%;
-      padding: 0.8rem 1rem;
-      margin-bottom: 1rem;
+      padding: 10px 12px;
       border: 1px solid var(--border-color);
-      border-radius: 10px;
-      background: var(--input-bg);
-      color: var(--text-main);
-      font-size: 1rem;
+      border-radius: 6px;
+      font-size: 14px;
     }
 
-    .login-form button {
-      width: 100%;
-      background: var(--color-primario);
+    .btn-main {
+      background-color: var(--accent-color);
       color: white;
       border: none;
-      padding: 0.8rem;
-      border-radius: 10px;
-      font-weight: 600;
-      font-size: 1rem;
+      padding: 12px;
+      width: 100%;
+      border-radius: 6px;
+      font-size: 16px;
+      font-weight: bold;
       cursor: pointer;
       transition: background 0.2s;
     }
 
-    .login-form button:hover {
-      background: var(--color-secundario);
+    .btn-main:hover {
+      background-color: #d35400;
     }
 
-    /* PANEL DE ADMINISTRACIÓN */
+    /* Panel de Administración */
     #admin-panel {
       display: none;
-      background: var(--input-bg);
-      color: var(--text-main);
-      padding: 2rem;
-      border-radius: 24px;
-      width: 94%;
-      max-width: 1000px;
+      width: 100%;
+      max-width: 1200px;
+      background: var(--card-bg);
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      padding: 30px;
+      margin-top: 20px;
       max-height: 90vh;
       overflow-y: auto;
+    }
+
+    .admin-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid var(--border-color);
+      padding-bottom: 15px;
+      margin-bottom: 25px;
+    }
+
+    .admin-header h1 {
+      color: var(--primary-color);
+      font-size: 24px;
+    }
+
+    .btn-logout {
+      background-color: #e74c3c;
+      color: white;
+      border: none;
+      padding: 8px 15px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .btn-logout:hover {
+      background-color: #c0392b;
+    }
+
+    /* Estadísticas rápidas */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin-bottom: 30px;
+    }
+
+    .stat-card {
+      background: #f8f9fa;
+      padding: 15px;
+      border-radius: 8px;
+      border-left: 4px solid var(--accent-color);
+    }
+
+    .stat-card h3 {
+      font-size: 14px;
+      color: #7f8c8d;
+      margin-bottom: 5px;
+    }
+
+    .stat-card p {
+      font-size: 22px;
+      font-weight: bold;
+      color: var(--primary-color);
+    }
+
+    /* Secciones del panel */
+    .panel-section {
+      margin-bottom: 40px;
+      background: #fafbfc;
       border: 1px solid var(--border-color);
-      box-shadow: var(--shadow-lg);
-      margin: 2rem auto;
+      padding: 20px;
+      border-radius: 8px;
     }
-    
-    .panel-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--border-color); padding-bottom: 1rem; margin-bottom: 1.2rem; }
-    .panel-header h3 { font-family: 'Playfair Display', serif; color: var(--color-primario); font-size: 1.8rem; }
-    
-    .logout-panel-btn { background: #fee2e2; border: 1px solid #fca5a5; font-size: 0.85rem; color: #b91c1c; cursor: pointer; padding: 0.4rem 0.9rem; border-radius: 30px; font-weight: 600; display: flex; align-items: center; gap: 5px; }
 
-    .admin-stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
-    .stat-box { background: var(--bg-admin-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 0.8rem; text-align: center; }
-    .stat-number { font-size: 1.4rem; font-weight: 700; color: var(--color-primario); }
-    .stat-label { font-size: 0.72rem; color: var(--text-muted); font-weight: 600; margin-top: 2px; }
-
-    .admin-card { background: var(--bg-admin-card); border: 1px solid var(--border-color); padding: 1.5rem; border-radius: 16px; margin-bottom: 1.5rem; }
-    .admin-card-title { font-size: 1.05rem; font-weight: 700; margin-bottom: 1rem; display: flex; align-items: center; justify-content: space-between; width: 100%; }
-
-    .admin-form label { display: block; font-size: 0.8rem; font-weight: 600; color: var(--text-muted); margin-bottom: 0.3rem; text-transform: uppercase; }
-    .admin-form input, .admin-form select, .admin-form textarea { width: 100%; padding: 0.65rem 0.9rem; margin-bottom: 1rem; border: 1px solid var(--border-color); border-radius: 10px; background: var(--input-bg); color: var(--text-main); font-size: 0.9rem; }
-
-    .btn-ai-autofill {
-      background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); color: white; border: none;
-      padding: 0.65rem 1.1rem; border-radius: 10px; font-weight: 600; font-size: 0.85rem; cursor: pointer;
-      display: flex; align-items: center; gap: 8px; margin-bottom: 1rem; transition: opacity 0.2s;
+    .panel-section h2 {
+      margin-bottom: 15px;
+      font-size: 18px;
+      color: var(--primary-color);
     }
-    .btn-ai-autofill:hover { opacity: 0.9; }
 
-    .form-img-preview-container { display: flex; gap: 1.5rem; align-items: flex-start; }
-    .form-inputs-side { flex: 2; }
-    .live-preview-box { flex: 0.8; height: 210px; border: 2px dashed var(--border-color); border-radius: 12px; display: flex; align-items: center; justify-content: center; overflow: hidden; background: var(--input-bg); padding: 6px; }
-    .live-preview-box img { max-width: 100%; max-height: 100%; object-fit: contain; }
+    .form-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 15px;
+    }
 
-    .form-row { display: flex; gap: 1rem; }
-    .form-row > div { flex: 1; }
+    /* Tabla de administración */
+    .table-responsive {
+      overflow-x: auto;
+    }
 
-    .admin-action-btn-row { display: flex; gap: 10px; }
-    button.btn-primary { background: var(--color-primario); color: white; border: none; padding: 0.85rem 1.5rem; border-radius: 10px; font-weight: 600; font-size: 0.95rem; cursor: pointer; flex: 2; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+      background: white;
+    }
 
-    /* TABLA DE GESTIÓN */
-    .admin-table-controls { display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin-bottom: 0.8rem; }
-    .admin-table-search { position: relative; flex-grow: 1; max-width: 350px; }
-    .admin-table-search input { width: 100%; padding: 0.5rem 1rem 0.5rem 2.2rem; border-radius: 20px; border: 1px solid var(--border-color); background: var(--input-bg); color: var(--text-main); font-size: 0.85rem; }
-    .admin-table-search i { position: absolute; left: 0.8rem; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 0.8rem; }
+    th, td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid var(--border-color);
+      font-size: 14px;
+    }
 
-    .table-container { max-height: 380px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 12px; }
-    .management-table { width: 100%; border-collapse: collapse; background: var(--input-bg); color: var(--text-main); font-size: 0.83rem; }
-    .management-table th { position: sticky; top: 0; background: var(--bg-admin-card); color: var(--text-muted); font-weight: 700; padding: 0.6rem 0.8rem; border-bottom: 2px solid var(--border-color); z-index: 5; text-align: left; }
-    .management-table td { padding: 0.45rem 0.8rem; border-bottom: 1px solid var(--border-color); vertical-align: middle; }
-    
-    .tbl-thumb { width: 32px; height: 45px; object-fit: contain; background: transparent; border-radius: 4px; padding: 2px; }
-    .tbl-badge { padding: 2px 8px; border-radius: 12px; font-size: 0.72rem; font-weight: 600; }
-    .tbl-badge.disp { background: #d1fae5; color: #047857; }
-    .tbl-badge.agot { background: #fee2e2; color: #b91c1c; }
+    th {
+      background-color: #f1f2f6;
+      color: var(--primary-color);
+    }
 
-    .action-btns button { border: none; padding: 0.3rem 0.6rem; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.75rem; }
-    .toggle-disp-btn { background: #e0e7ff; color: #3730a3; margin-right: 0.2rem; }
-    .edit-btn { background: #e0f2fe; color: #0369a1; margin-right: 0.2rem; }
-    .delete-btn { background: #fee2e2; color: #b91c1c; }
+    .tbl-thumb {
+      width: 40px;
+      height: 55px;
+      object-fit: cover;
+      border-radius: 4px;
+    }
 
-    /* TOAST NOTIFICATIONS */
-    #toast-container { position: fixed; bottom: 2.5rem; right: 2.5rem; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
-    .toast { background: #1e293b; color: white; padding: 1rem 1.5rem; border-radius: 12px; font-weight: 500; font-size: 0.9rem; box-shadow: var(--shadow-lg); display: flex; align-items: center; gap: 10px; border-left: 4px solid var(--color-secundario); }
+    .tbl-badge {
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: bold;
+    }
 
-    @media (max-width: 768px) {
-      .form-row, .form-img-preview-container { flex-direction: column; }
-      .admin-stats-grid { grid-template-columns: repeat(2, 1fr); }
+    .tbl-badge.disp { background-color: #e2f0d9; color: #385723; }
+    .tbl-badge.agot { background-color: #fce4d6; color: #c65911; }
+
+    .action-btns button {
+      padding: 6px 10px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-right: 5px;
+      color: white;
+    }
+
+    .toggle-disp-btn { background-color: #3498db; }
+    .edit-btn { background-color: #f39c12; }
+    .delete-btn { background-color: #e74c3c; }
+
+    /* Toast Notifications */
+    #toast-container {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 9999;
+    }
+
+    .toast {
+      background: var(--primary-color);
+      color: white;
+      padding: 12px 20px;
+      border-radius: 6px;
+      margin-top: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .preview-box {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      margin-top: 10px;
+    }
+
+    .preview-box img {
+      width: 80px;
+      height: 110px;
+      object-fit: cover;
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
     }
   </style>
 </head>
 <body>
 
-  <div id="toast-container"></div>
-  
-  <!-- INTERFAZ DE INICIO DE SESIÓN -->
+  <!-- LOGIN DE ACCESO -->
   <div id="login-container">
-    <img src="https://i.postimg.cc/ZYGd9Hh8/l-OGO-TERMINADO.png" alt="Logo">
-    <h2>Iniciar Sesión</h2>
-    <form class="login-form" onsubmit="verificarLogin(event)">
-      <input type="password" id="login-password" placeholder="Contraseña de acceso" required>
-      <button type="submit">Entrar al Administrador</button>
+    <h2>Librería Milenium</h2>
+    <p style="margin-bottom: 20px; font-size: 14px; color: #7f8c8d;">Acceso al panel de control</p>
+    <form onsubmit="verificarLogin(event)">
+      <div class="form-group">
+        <label for="login-password">Contraseña de Administrador</label>
+        <input type="password" id="login-password" placeholder="Ingresa la contraseña" required>
+      </div>
+      <button type="submit" class="btn-main">Ingresar</button>
     </form>
   </div>
 
-  <!-- PANEL DE ADMINISTRACIÓN -->
+  <!-- PANEL DE ADMINISTRACIÓN PRINCIPAL -->
   <div id="admin-panel">
-    <div class="panel-header">
-      <h3>Panel de Gestión de Libros</h3>
-      <button class="logout-panel-btn" onclick="cerrarSesionAdmin()"><i class="fa-solid fa-lock"></i> Cerrar Sesión</button>
+    <div class="admin-header">
+      <h1><i class="fa-solid fa-gauge-high"></i> Panel de Gestión - Librería Milenium</h1>
+      <button class="btn-logout" onclick="cerrarSesionAdmin()"><i class="fa-solid fa-right-from-bracket"></i> Salir</button>
     </div>
 
-    <!-- ESTADÍSTICAS REAL-TIME -->
-    <div class="admin-stats-grid">
-      <div class="stat-box"><div class="stat-number" id="stat-total">0</div><div class="stat-label">Total Libros</div></div>
-      <div class="stat-box"><div class="stat-number" id="stat-disp">0</div><div class="stat-label">Disponibles</div></div>
-      <div class="stat-box"><div class="stat-number" id="stat-agot">0</div><div class="stat-label">Agotados</div></div>
-      <div class="stat-box"><div class="stat-number" id="stat-desc">0</div><div class="stat-label">Descontinuados</div></div>
-    </div>
-
-    <div class="admin-card">
-      <div class="admin-card-title">
-        <span id="panel-title"><i class="fa-solid fa-plus-circle"></i> Agregar Nuevo Libro</span>
+    <!-- TARJETAS DE ESTADÍSTICAS -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <h3>Total de Libros</h3>
+        <p id="stat-total">0</p>
       </div>
-      
-      <form class="admin-form" id="book-form" onsubmit="guardarLibro(event)">
-        <input type="hidden" id="edit-idFirebase" value="">
+      <div class="stat-card">
+        <h3>Disponibles</h3>
+        <p id="stat-disp">0</p>
+      </div>
+      <div class="stat-card">
+        <h3>Agotados</h3>
+        <p id="stat-agot">0</p>
+      </div>
+      <div class="stat-card">
+        <h3>Descontinuados</h3>
+        <p id="stat-desc">0</p>
+      </div>
+    </div>
+
+    <!-- SECCIÓN: CONFIGURACIÓN DE REDES Y QR -->
+    <div class="panel-section">
+      <h2><i class="fa-solid fa-share-nodes"></i> Configuración de Redes Sociales y Enlaces</h2>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Enlace de WhatsApp</label>
+          <input type="text" id="admin-whatsapp" placeholder="Ej: https://wa.me/5653274335">
+        </div>
+        <div class="form-group">
+          <label>Enlace de Facebook</label>
+          <input type="text" id="admin-facebook" placeholder="URL de Facebook">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Enlace de Instagram</label>
+          <input type="text" id="admin-instagram" placeholder="URL de Instagram">
+        </div>
+        <div class="form-group">
+          <label>Imagen del Código QR (URL)</label>
+          <input type="text" id="admin-qr-image" placeholder="URL de la imagen del QR">
+        </div>
+      </div>
+      <button type="button" class="btn-main" style="max-width: 250px;" onclick="guardarConfigRedesQR()">Guardar Redes y QR</button>
+    </div>
+
+    <!-- SECCIÓN: AGREGAR / EDITAR LIBRO -->
+    <div class="panel-section">
+      <h2 id="panel-title"><i class="fa-solid fa-plus-circle"></i> Agregar Nuevo Libro</h2>
+      <form id="book-form" onsubmit="guardarLibro(event)">
+        <input type="hidden" id="edit-idFirebase">
         
         <div class="form-row">
-          <div>
+          <div class="form-group">
             <label>Título del Libro</label>
             <input type="text" id="form-titulo" required>
           </div>
-          <div>
+          <div class="form-group">
             <label>Autor</label>
             <input type="text" id="form-autor" required>
           </div>
         </div>
 
-        <button type="button" class="btn-ai-autofill" onclick="autocompletarLibroIA()">
-          <i class="fa-solid fa-wand-magic-sparkles"></i> Buscar y Auto-completar datos con IA
-        </button>
+        <div style="margin-bottom: 15px;">
+          <button type="button" class="btn-main" style="background-color: #2980b9; max-width: 220px; font-size: 13px; padding: 8px;" onclick="autocompletarLibroIA()">
+            <i class="fa-solid fa-wand-magic-sparkles"></i> Autocompletar con Google Books
+          </button>
+        </div>
 
-        <div class="form-img-preview-container">
-          <div class="form-inputs-side">
-            <label>URL de la Imagen Portada</label>
-            <input type="url" id="form-imagen" oninput="actualizarLivePreview(this.value)" required>
-            
-            <div class="form-row">
-              <div>
-                <label>Categoría Principal</label>
-                <input type="text" id="form-categoria" placeholder="ej. Fantasía" required>
-              </div>
-              <div>
-                <label>Categoría Secundaria (Opcional)</label>
-                <input type="text" id="form-categoria2" placeholder="ej. Romántica">
-              </div>
-            </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>URL de la Portada</label>
+            <input type="text" id="form-imagen" oninput="actualizarLivePreview(this.value)" required>
           </div>
-          <div class="live-preview-box">
-            <img id="form-live-img" src="https://via.placeholder.com/140x200?text=Sin+Portada" alt="Vista Previa">
+          <div class="form-group">
+            <label>Precio ($)</label>
+            <input type="number" step="0.50" id="form-precio" required>
           </div>
         </div>
 
-        <label>Resumen / Descripción Corta</label>
-        <textarea id="form-resumen" rows="2"></textarea>
-        
+        <div class="preview-box" style="margin-bottom: 15px;">
+          <img id="form-live-img" src="https://via.placeholder.com/140x200?text=Sin+Portada" alt="Vista previa">
+          <span style="font-size: 13px; color: #7f8c8d;">Vista previa de la portada cargada</span>
+        </div>
+
         <div class="form-row">
-          <div>
-            <label>Precio ($)</label>
-            <input type="number" id="form-precio" required>
+          <div class="form-group">
+            <label>Categoría Principal</label>
+            <input type="text" id="form-categoria" required>
           </div>
-          <div>
-            <label>Disponibilidad</label>
+          <div class="form-group">
+            <label>Categoría Secundaria (Opcional)</label>
+            <input type="text" id="form-categoria2">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Estado de Disponibilidad</label>
             <select id="form-disponible">
               <option value="true">Disponible</option>
               <option value="false">Agotado</option>
@@ -273,66 +401,54 @@
             </select>
           </div>
         </div>
-        
-        <div class="admin-action-btn-row">
-          <button type="submit" class="btn-primary" id="submit-form-btn">Guardar Libro en Catálogo</button>
+
+        <div class="form-group">
+          <label>Resumen / Sinopsis</label>
+          <textarea id="form-resumen" rows="3" required></textarea>
+        </div>
+
+        <div style="display: flex; gap: 10px;">
+          <button type="submit" class="btn-main" style="max-width: 200px;">Guardar Libro</button>
+          <button type="button" class="btn-main" style="background-color: #95a5a6; max-width: 150px;" onclick="limpiarFormulario()">Cancelar</button>
         </div>
       </form>
     </div>
 
-    <!-- SECCIÓN DE CONFIGURACIÓN DE REDES SOCIALES Y QR -->
-    <div class="admin-card">
-      <div class="admin-card-title">
-        <span><i class="fa-solid fa-share-nodes"></i> Redes Sociales y Código QR</span>
+    <!-- SECCIÓN: LISTADO Y GESTIÓN DE LIBROS -->
+    <div class="panel-section">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
+        <h2><i class="fa-solid fa-books"></i> Catálogo Actual (<span id="count-tabla-admin">0</span> libros)</h2>
+        <input type="text" id="admin-search-input" placeholder="Buscar por título o autor..." style="max-width: 300px; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: 6px;" oninput="filtrarTablaAdmin(this.value)">
       </div>
-      <div class="admin-form">
-        <div class="form-row">
-          <div>
-            <label for="admin-whatsapp"><i class="fa-brands fa-whatsapp"></i> Enlace de WhatsApp</label>
-            <input type="url" id="admin-whatsapp" placeholder="https://wa.me/52...">
-          </div>
-          <div>
-            <label for="admin-facebook"><i class="fa-brands fa-facebook"></i> Enlace de Facebook</label>
-            <input type="url" id="admin-facebook" placeholder="https://facebook.com/tu-libreria">
-          </div>
-        </div>
-        <div class="form-row">
-          <div>
-            <label for="admin-instagram"><i class="fa-brands fa-instagram"></i> Enlace de Instagram</label>
-            <input type="url" id="admin-instagram" placeholder="https://instagram.com/tu-libreria">
-          </div>
-          <div>
-            <label for="admin-qr-image"><i class="fa-solid fa-qrcode"></i> URL de la Imagen del Código QR</label>
-            <input type="text" id="admin-qr-image" placeholder="assets/img/qr-code.png o enlace web">
-          </div>
-        </div>
-        <button type="button" class="btn-primary" onclick="guardarConfigRedesQR()" style="width: 100%;">
-          <i class="fa-solid fa-floppy-disk"></i> Guardar Cambios de Redes y QR
-        </button>
-      </div>
-    </div>
-
-    <!-- INVENTARIO CON BUSCADOR INTERNO -->
-    <div class="management-section">
-      <div class="admin-table-controls">
-        <h4><i class="fa-solid fa-list-check"></i> Inventario (<span id="count-tabla-admin">0</span>)</h4>
-        <div class="admin-table-search">
-          <i class="fa-solid fa-magnifying-glass"></i>
-          <input type="text" id="search-admin-table" placeholder="Filtrar en inventario..." oninput="filtrarTablaAdmin(this.value)">
-        </div>
-      </div>
-
-      <div class="table-container">
-        <table class="management-table">
+      
+      <div class="table-responsive">
+        <table>
           <thead>
-            <tr><th>Portada</th><th>Título</th><th>Autor</th><th>Precio</th><th>Estado</th><th>Acciones</th></tr>
+            <tr>
+              <th>Portada</th>
+              <th>Título</th>
+              <th>Autor</th>
+              <th>Precio</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr>
           </thead>
-          <tbody id="management-table-body"></tbody>
+          <tbody id="management-table-body">
+            <!-- Los libros se cargan dinámicamente vía JS -->
+          </tbody>
         </table>
       </div>
     </div>
   </div>
 
+  <!-- CONTENEDOR DE ALERTAS TOAST -->
+  <div id="toast-container"></div>
+
+  <!-- FIREBASE SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
+  <!-- SCRIPT DE FUNCIONAMIENTO -->
   <script>
     const ADMIN_PASSWORD = "Milenium2026";
 
@@ -585,14 +701,16 @@
 
     function guardarConfigRedesQR() {
       if(!adminAutenticado) return;
+      
       const configRedes = {
         whatsapp: document.getElementById('admin-whatsapp').value,
         facebook: document.getElementById('admin-facebook').value,
         instagram: document.getElementById('admin-instagram').value,
-        qrImage: document.getElementById('admin-qr-image').value
+        qr: document.getElementById('admin-qr-image').value
       };
 
-      db.ref('configuracion/redes_qr').set(configRedes).then(() => {
+      // Guarda de forma plana directamente bajo la rama 'configuracion'
+      db.ref('configuracion').update(configRedes).then(() => {
         lanzarToast("Redes sociales y código QR actualizados");
       }).catch(() => {
         lanzarToast("Error al guardar en la base de datos");
@@ -600,14 +718,14 @@
     }
 
     function cargarConfigRedesQR() {
-      db.ref('configuracion/redes_qr').once('value').then((snapshot) => {
-        const configRedes = snapshot.val();
-        if (configRedes) {
+      db.ref('configuracion').once('value').then((snapshot) => {
+        const config = snapshot.val();
+        if (config) {
           if(document.getElementById('admin-whatsapp')) {
-            document.getElementById('admin-whatsapp').value = configRedes.whatsapp || '';
-            document.getElementById('admin-facebook').value = configRedes.facebook || '';
-            document.getElementById('admin-instagram').value = configRedes.instagram || '';
-            document.getElementById('admin-qr-image').value = configRedes.qrImage || '';
+            document.getElementById('admin-whatsapp').value = config.whatsapp || '';
+            document.getElementById('admin-facebook').value = config.facebook || '';
+            document.getElementById('admin-instagram').value = config.instagram || '';
+            document.getElementById('admin-qr-image').value = config.qr || config.qrImage || '';
           }
         }
       });
