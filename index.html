@@ -280,6 +280,38 @@
       </form>
     </div>
 
+    <!-- SECCIÓN DE CONFIGURACIÓN DE REDES SOCIALES Y QR -->
+    <div class="admin-card">
+      <div class="admin-card-title">
+        <span><i class="fa-solid fa-share-nodes"></i> Redes Sociales y Código QR</span>
+      </div>
+      <div class="admin-form">
+        <div class="form-row">
+          <div>
+            <label for="admin-whatsapp"><i class="fa-brands fa-whatsapp"></i> Enlace de WhatsApp</label>
+            <input type="url" id="admin-whatsapp" placeholder="https://wa.me/52...">
+          </div>
+          <div>
+            <label for="admin-facebook"><i class="fa-brands fa-facebook"></i> Enlace de Facebook</label>
+            <input type="url" id="admin-facebook" placeholder="https://facebook.com/tu-libreria">
+          </div>
+        </div>
+        <div class="form-row">
+          <div>
+            <label for="admin-instagram"><i class="fa-brands fa-instagram"></i> Enlace de Instagram</label>
+            <input type="url" id="admin-instagram" placeholder="https://instagram.com/tu-libreria">
+          </div>
+          <div>
+            <label for="admin-qr-image"><i class="fa-solid fa-qrcode"></i> URL de la Imagen del Código QR</label>
+            <input type="text" id="admin-qr-image" placeholder="assets/img/qr-code.png o enlace web">
+          </div>
+        </div>
+        <button type="button" class="btn-primary" onclick="guardarConfigRedesQR()" style="width: 100%;">
+          <i class="fa-solid fa-floppy-disk"></i> Guardar Cambios de Redes y QR
+        </button>
+      </div>
+    </div>
+
     <!-- INVENTARIO CON BUSCADOR INTERNO -->
     <div class="management-section">
       <div class="admin-table-controls">
@@ -302,7 +334,6 @@
   </div>
 
   <script>
-    // NUEVA CONTRASEÑA SIN ACENTOS PARA EVITAR PROBLEMAS DE CODIFICACIÓN
     const ADMIN_PASSWORD = "Milenium2026";
 
     const firebaseConfig = {
@@ -340,6 +371,7 @@
         document.getElementById('admin-panel').style.display = 'block';
         document.body.style.alignItems = 'flex-start';
         conectarBaseDeDatos();
+        cargarConfigRedesQR();
         lanzarToast("Bienvenido al panel de administración");
       } else {
         lanzarToast("Contraseña incorrecta");
@@ -549,6 +581,36 @@
           lanzarToast(`"${titulo}" fue removido`);
         });
       }
+    }
+
+    function guardarConfigRedesQR() {
+      if(!adminAutenticado) return;
+      const configRedes = {
+        whatsapp: document.getElementById('admin-whatsapp').value,
+        facebook: document.getElementById('admin-facebook').value,
+        instagram: document.getElementById('admin-instagram').value,
+        qrImage: document.getElementById('admin-qr-image').value
+      };
+
+      db.ref('configuracion/redes_qr').set(configRedes).then(() => {
+        lanzarToast("Redes sociales y código QR actualizados");
+      }).catch(() => {
+        lanzarToast("Error al guardar en la base de datos");
+      });
+    }
+
+    function cargarConfigRedesQR() {
+      db.ref('configuracion/redes_qr').once('value').then((snapshot) => {
+        const configRedes = snapshot.val();
+        if (configRedes) {
+          if(document.getElementById('admin-whatsapp')) {
+            document.getElementById('admin-whatsapp').value = configRedes.whatsapp || '';
+            document.getElementById('admin-facebook').value = configRedes.facebook || '';
+            document.getElementById('admin-instagram').value = configRedes.instagram || '';
+            document.getElementById('admin-qr-image').value = configRedes.qrImage || '';
+          }
+        }
+      });
     }
   </script>
 </body>
