@@ -411,9 +411,9 @@
             <div class="form-group">
               <label>Estado de Disponibilidad</label>
               <select id="form-disponible">
-                <option value="Disponible">Disponible</option>
-                <option value="Agotado">Agotado</option>
-                <option value="Descontinuado">Descontinuado</option>
+                <option value="true">Disponible</option>
+                <option value="false">Agotado</option>
+                <option value="discontinued">Descontinuado</option>
               </select>
             </div>
           </div>
@@ -478,18 +478,23 @@
         </div>
 
         <div class="form-group">
-          <label>WHATSAPP (ENLACE COMPLETO)</label>
-          <input type="text" id="admin-whatsapp" placeholder="Ej: https://wa.me/5217220000000">
+          <label>WHATSAPP (NÚMERO CON CÓDIGO DE PAÍS)</label>
+          <input type="text" id="admin-whatsapp" placeholder="Ej: https://wa.me/5653274335">
         </div>
 
         <div class="form-group">
-          <label>IMAGEN DEL CÓDIGO QR / LOGO IZQUIERDO (URL)</label>
-          <input type="text" id="admin-logo-left" placeholder="URL del logo izquierdo">
+          <label>FACEBOOK (URL)</label>
+          <input type="text" id="admin-facebook" placeholder="URL de Facebook">
         </div>
 
         <div class="form-group">
-          <label>LOGO DERECHO (URL)</label>
-          <input type="text" id="admin-logo-right" placeholder="URL del logo derecho">
+          <label>INSTAGRAM (URL)</label>
+          <input type="text" id="admin-instagram" placeholder="URL de Instagram">
+        </div>
+
+        <div class="form-group">
+          <label>IMAGEN DEL CÓDIGO QR / LOGO (URL)</label>
+          <input type="text" id="admin-qr-image" placeholder="URL de la imagen QR">
         </div>
 
         <button type="button" class="btn-main" style="max-width: 250px;" onclick="guardarConfigRedesQR()">Aplicar Cambios del Sitio</button>
@@ -586,8 +591,8 @@
       let disponibles = 0; let agotados = 0; let descontinuados = 0;
 
       misLibros.forEach(l => {
-        if(l.estado === "Descontinuado") descontinuados++;
-        else if(l.estado === "Agotado") agotados++;
+        if(l.available === "discontinued") descontinuados++;
+        else if(l.available === false || l.available === "false") agotados++;
         else disponibles++;
       });
 
@@ -660,22 +665,20 @@
       listaMostrar.forEach((libro) => {
         const indexOriginal = misLibros.findIndex(m => m.idFirebase === libro.idFirebase);
         
-        let estadoActual = libro.estado || 'Disponible';
-        let claseBadge = 'disp';
-        if (estadoActual === 'Agotado' || estadoActual === 'Descontinuado') {
-          claseBadge = 'agot';
-        }
-        let badgeHtml = `<span class="tbl-badge ${claseBadge}">${estadoActual}</span>`;
+        let estaDisponible = libro.available === true || libro.available === "true";
+        let badgeHtml = estaDisponible 
+          ? `<span class="tbl-badge disp">Disponible</span>` 
+          : `<span class="tbl-badge agot">Agotado</span>`;
 
         tbody.innerHTML += `
           <tr>
             <td><img src="${libro.imagen}" class="tbl-thumb"></td>
             <td><strong>${libro.titulo}</strong></td>
             <td>${libro.autor}</td>
-            <td>$${parseFloat(libro.precio || 0).toFixed(2)}</td>
+            <td>$${libro.precio}</td>
             <td>${badgeHtml}</td>
             <td class="action-btns">
-              <button class="toggle-disp-btn" title="Cambiar Estado Rápido" onclick="conmutarEstadoRapido('${libro.idFirebase}', '${estadoActual}')"><i class="fa-solid fa-arrows-rotate"></i></button>
+              <button class="toggle-disp-btn" title="Cambiar Estado Rápido" onclick="conmutarEstadoRapido('${libro.idFirebase}', ${estaDisponible})"><i class="fa-solid fa-arrows-rotate"></i></button>
               <button class="edit-btn" onclick="cargarLibroEnFormulario(${indexOriginal})"><i class="fa-solid fa-pen"></i></button>
               <button class="delete-btn" onclick="eliminarLibro('${libro.idFirebase}', '${libro.titulo}')"><i class="fa-solid fa-trash"></i></button>
             </td>
@@ -685,8 +688,7 @@
 
     function conmutarEstadoRapido(idFirebase, estadoActual) {
       if(!adminAutenticado) return;
-      let nuevoEstado = estadoActual === 'Disponible' ? 'Agotado' : 'Disponible';
-      db.ref('libros/' + idFirebase + '/estado').set(nuevoEstado).then(() => {
+      db.ref('libros/' + idFirebase + '/available').set(!estadoActual).then(() => {
         lanzarToast("Estado actualizado correctamente");
       });
     }
@@ -696,14 +698,20 @@
       if(!adminAutenticado) return;
       const idFirebase = document.getElementById('edit-idFirebase').value;
       
+      const valorDisp = document.getElementById('form-disponible').value;
+      let valorGuardarDisp = valorDisp;
+      if (valorDisp === "true") valorGuardarDisp = true;
+      if (valorDisp === "false") valorGuardarDisp = false;
+
       const nuevoLibro = {
         titulo: document.getElementById('form-titulo').value,
         autor: document.getElementById('form-autor').value,
         imagen: document.getElementById('form-imagen').value,
         resumen: document.getElementById('form-resumen').value,
         precio: parseFloat(document.getElementById('form-precio').value),
-        categoria: document.getElementById('form-categoria').value + (document.getElementById('form-categoria2').value ? ', ' + document.getElementById('form-categoria2').value : ''),
-        estado: document.getElementById('form-disponible').value
+        categoria: document.getElementById('form-categoria').value,
+        categoria2: document.getElementById('form-categoria2').value || "",
+        available: valorGuardarDisp
       };
 
       if (idFirebase === "") {
@@ -728,13 +736,18 @@
       document.getElementById('form-live-img').src = libro.imagen;
       document.getElementById('form-resumen').value = libro.resumen;
       document.getElementById('form-precio').value = libro.precio;
-      
-      const cats = (libro.categoria || '').split(',');
-      document.getElementById('form-categoria').value = cats[0] ? cats[0].trim() : '';
-      document.getElementById('form-categoria2').value = cats[1] ? cats[1].trim() : '';
+      document.getElementById('form-categoria').value = libro.categoria;
+      document.getElementById('form-categoria2').value = libro.categoria2 || "";
       
       document.getElementById('panel-title').innerHTML = `<i class="fa-solid fa-pen-to-square"></i> Editando: ${libro.titulo}`;
-      document.getElementById('form-disponible').value = libro.estado || 'Disponible';
+
+      if (libro.available === true || libro.available === "true") {
+        document.getElementById('form-disponible').value = "true";
+      } else if (libro.available === false || libro.available === "false") {
+        document.getElementById('form-disponible').value = "false";
+      } else {
+        document.getElementById('form-disponible').value = libro.available; 
+      }
       
       document.getElementById('admin-panel').scrollTo({top: 0, behavior: 'smooth'});
     }
@@ -760,13 +773,15 @@
       
       const configRedes = {
         direccion: document.getElementById('admin-direccion').value,
-        iframeMap: document.getElementById('admin-mapa').value,
-        horarios: document.getElementById('admin-horario').value,
+        mapaUrl: document.getElementById('admin-mapa').value,
+        horario: document.getElementById('admin-horario').value,
         whatsapp: document.getElementById('admin-whatsapp').value,
-        logoLeft: document.getElementById('admin-logo-left').value,
-        logoRight: document.getElementById('admin-logo-right').value
+        facebook: document.getElementById('admin-facebook').value,
+        instagram: document.getElementById('admin-instagram').value,
+        qr: document.getElementById('admin-qr-image').value
       };
 
+      // Se guarda plano en 'configuracion' para que coincida con lo que el catálogo consulta
       db.ref('configuracion').update(configRedes).then(() => {
         lanzarToast("Datos de ubicación y redes actualizados correctamente");
       }).catch(() => {
@@ -780,11 +795,12 @@
         if (config) {
           if(document.getElementById('admin-whatsapp')) {
             document.getElementById('admin-direccion').value = config.direccion || '';
-            document.getElementById('admin-mapa').value = config.iframeMap || '';
-            document.getElementById('admin-horario').value = config.horarios || '';
+            document.getElementById('admin-mapa').value = config.mapaUrl || '';
+            document.getElementById('admin-horario').value = config.horario || '';
             document.getElementById('admin-whatsapp').value = config.whatsapp || '';
-            document.getElementById('admin-logo-left').value = config.logoLeft || '';
-            document.getElementById('admin-logo-right').value = config.logoRight || '';
+            document.getElementById('admin-facebook').value = config.facebook || '';
+            document.getElementById('admin-instagram').value = config.instagram || '';
+            document.getElementById('admin-qr-image').value = config.qr || config.qrImage || '';
           }
         }
       });
