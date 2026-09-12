@@ -265,6 +265,40 @@
     .edit-btn { background-color: #f39c12; }
     .delete-btn { background-color: #e74c3c; }
 
+    /* Barra de Progreso de Subida */
+    .upload-progress-container {
+      display: none;
+      margin-bottom: 15px;
+      background: #f1f2f6;
+      border: 1px solid var(--border-color);
+      padding: 12px;
+      border-radius: 6px;
+    }
+
+    .upload-progress-info {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--primary-color);
+      margin-bottom: 6px;
+    }
+
+    .progress-bar-bg {
+      width: 100%;
+      height: 10px;
+      background-color: #dcdde1;
+      border-radius: 5px;
+      overflow: hidden;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      width: 0%;
+      background-color: var(--accent-color);
+      transition: width 0.1s ease-in-out;
+    }
+
     /* Toast Notifications */
     #toast-container {
       position: fixed;
@@ -423,8 +457,19 @@
             <textarea id="form-resumen" rows="3" required></textarea>
           </div>
 
+          <!-- BARRA DE PROGRESO Y CONTADOR DE SUBIDA -->
+          <div id="upload-progress-box" class="upload-progress-container">
+            <div class="upload-progress-info">
+              <span id="upload-status-text">Procesando información...</span>
+              <span id="upload-percentage">0%</span>
+            </div>
+            <div class="progress-bar-bg">
+              <div id="upload-bar-fill" class="progress-bar-fill"></div>
+            </div>
+          </div>
+
           <div style="display: flex; gap: 10px;">
-            <button type="submit" class="btn-main" style="max-width: 200px;">Guardar Libro</button>
+            <button type="submit" id="btn-submit-book" class="btn-main" style="max-width: 200px;">Guardar Libro</button>
             <button type="button" class="btn-main" style="background-color: #95a5a6; max-width: 150px;" onclick="limpiarFormulario()">Cancelar</button>
           </div>
         </form>
@@ -693,11 +738,39 @@
       });
     }
 
+    // Función de guardado con simulación de barra de progreso interactiva
     function guardarLibro(event) {
       event.preventDefault();
       if(!adminAutenticado) return;
-      const idFirebase = document.getElementById('edit-idFirebase').value;
       
+      const idFirebase = document.getElementById('edit-idFirebase').value;
+      const progressBox = document.getElementById('upload-progress-box');
+      const barFill = document.getElementById('upload-bar-fill');
+      const percentageText = document.getElementById('upload-percentage');
+      const statusText = document.getElementById('upload-status-text');
+      const submitBtn = document.getElementById('btn-submit-book');
+
+      // Mostrar barra y deshabilitar botón mientras carga
+      progressBox.style.display = 'block';
+      submitBtn.disabled = true;
+      submitBtn.style.opacity = '0.6';
+
+      let progreso = 0;
+      statusText.innerText = "Preparando datos del libro...";
+      
+      const intervaloSimulacion = setInterval(() => {
+        progreso += 10;
+        if (progreso <= 90) {
+          barFill.style.width = progreso + '%';
+          percentageText.innerText = progreso + '%';
+          if (progreso === 40) {
+            statusText.innerText = "Conectando con Firebase...";
+          } else if (progreso === 70) {
+            statusText.innerText = "Subiendo información y portada...";
+          }
+        }
+      }, 120);
+
       const valorDisp = document.getElementById('form-disponible').value;
       let valorGuardarDisp = valorDisp;
       if (valorDisp === "true") valorGuardarDisp = true;
@@ -714,17 +787,31 @@
         available: valorGuardarDisp
       };
 
-      if (idFirebase === "") {
-        db.ref('libros').push(nuevoLibro).then(() => {
+      const operacionFirebase = idFirebase === "" 
+        ? db.ref('libros').push(nuevoLibro) 
+        : db.ref('libros/' + idFirebase).set(nuevoLibro);
+
+      operacionFirebase.then(() => {
+        clearInterval(intervaloSimulacion);
+        barFill.style.width = '100%';
+        percentageText.innerText = '100%';
+        statusText.innerText = "¡Libro guardado con éxito!";
+
+        setTimeout(() => {
+          progressBox.style.display = 'none';
+          barFill.style.width = '0%';
+          submitBtn.disabled = false;
+          submitBtn.style.opacity = '1';
           limpiarFormulario();
-          lanzarToast("Nuevo libro agregado");
-        });
-      } else {
-        db.ref('libros/' + idFirebase).set(nuevoLibro).then(() => {
-          limpiarFormulario();
-          lanzarToast("Registro de libro modificado");
-        });
-      }
+          lanzarToast(idFirebase === "" ? "Nuevo libro agregado" : "Registro de libro modificado");
+        }, 700);
+      }).catch((error) => {
+        clearInterval(intervaloSimulacion);
+        progressBox.style.display = 'none';
+        submitBtn.disabled = false;
+        submitBtn.style.opacity = '1';
+        lanzarToast("Error al guardar el libro");
+      });
     }
 
     function cargarLibroEnFormulario(index) {
@@ -757,6 +844,7 @@
       document.getElementById('edit-idFirebase').value = ""; 
       document.getElementById('form-live-img').src = "https://via.placeholder.com/140x200?text=Sin+Portada";
       document.getElementById('panel-title').innerHTML = `<i class="fa-solid fa-plus-circle"></i> Agregar Nuevo Libro`;
+      document.getElementById('upload-progress-box').style.display = 'none';
     }
 
     function eliminarLibro(idFirebase, titulo) {
@@ -781,7 +869,6 @@
         qr: document.getElementById('admin-qr-image').value
       };
 
-      // Se guarda plano en 'configuracion' para que coincida con lo que el catálogo consulta
       db.ref('configuracion').update(configRedes).then(() => {
         lanzarToast("Datos de ubicación y redes actualizados correctamente");
       }).catch(() => {
