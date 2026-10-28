@@ -1173,7 +1173,8 @@
         horarios: horarioVal,
         schedule: horarioVal,
 
-        // Mapa (todas las variantes posibles en el index.html)
+        // Mapa (incluyendo iframeMap que usa script.js)
+        iframeMap: mapaVal,
         mapaUrl: mapaVal,
         mapa: mapaVal,
         mapUrl: mapaVal,
@@ -1186,12 +1187,12 @@
         telefono: soloNumerosWA || rawWhatsapp,
         facebook: facebookVal,
         fb: facebookVal,
-         facebookUrl: facebookVal,
+        facebookUrl: facebookVal,
         instagram: instagramVal,
         ig: instagramVal,
         instagramUrl: instagramVal,
 
-        // Código QR / Logo (soluciona la discrepancia entre config.qr y config.qrImage)
+        // Código QR / Logo
         qr: qrVal,
         qrImage: qrVal,
         qrUrl: qrVal,
@@ -1236,8 +1237,8 @@
           inspector.textContent = JSON.stringify(config, null, 2);
 
           document.getElementById('admin-direccion').value = config.direccion || config.ubicacion || '';
-          document.getElementById('admin-mapa').value = config.mapaUrl || config.mapa || config.mapUrl || '';
-          document.getElementById('admin-horario').value = config.horario || config.horarios || '';
+          document.getElementById('admin-mapa').value = config.iframeMap || config.mapaUrl || config.mapa || config.mapUrl || '';
+          document.getElementById('admin-horario').value = config.horarios || config.horario || '';
           document.getElementById('admin-whatsapp').value = config.whatsapp || config.telefono || '';
           document.getElementById('admin-facebook').value = config.facebook || config.facebookUrl || '';
           document.getElementById('admin-instagram').value = config.instagram || config.instagramUrl || '';
