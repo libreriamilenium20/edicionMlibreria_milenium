@@ -7,10 +7,10 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     :root {
-      --primary-color: #2c3e50;
-      --accent-color: #e67e22;
-      --accent-hover: #d35400;
-      --success-color: #27ae60;
+      --primary-color: #1e3c72;
+      --accent-color: #f59e0b;
+      --accent-hover: #d97706;
+      --success-color: #059669;
       --danger-color: #e74c3c;
       --bg-color: #f4f6f9;
       --card-bg: #ffffff;
@@ -88,7 +88,7 @@
 
     .btn-main {
       background-color: var(--accent-color);
-      color: white;
+      color: #111827;
       border: none;
       padding: 12px 18px;
       width: 100%;
@@ -105,6 +105,7 @@
 
     .btn-main:hover {
       background-color: var(--accent-hover);
+      color: white;
     }
 
     .btn-main:active {
@@ -215,7 +216,7 @@
     /* Estadísticas rápidas */
     .stats-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
       gap: 15px;
       margin-bottom: 25px;
     }
@@ -258,8 +259,51 @@
 
     .form-row {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
       gap: 15px;
+    }
+
+    /* Caja de vista previa de Descuento estilo Mercado Libre */
+    .discount-preview-card {
+      background: #ffffff;
+      border: 2px dashed #059669;
+      border-radius: 10px;
+      padding: 12px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 15px;
+      margin-bottom: 18px;
+    }
+
+    .ml-price-box {
+      line-height: 1.15;
+    }
+
+    .ml-old-price {
+      display: block;
+      font-size: 13px;
+      color: #9ca3af;
+      text-decoration: line-through;
+    }
+
+    .ml-new-price-row {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+    }
+
+    .ml-current-price {
+      font-size: 24px;
+      font-weight: 800;
+      color: #111827;
+    }
+
+    .ml-discount-tag {
+      font-size: 14px;
+      font-weight: 700;
+      color: #059669;
     }
 
     /* Tabla de administración */
@@ -348,7 +392,7 @@
     .progress-bar-fill {
       height: 100%;
       width: 0%;
-      background-color: var(--accent-color);
+      background-color: var(--success-color);
       transition: width 0.15s ease-in-out;
     }
 
@@ -489,7 +533,7 @@
     <!-- PESTAÑAS SUPERIORES -->
     <div class="nav-tabs">
       <button class="tab-btn active" onclick="cambiarPestaña('libros', this)">
-        <i class="fa-solid fa-box-archive"></i> Gestión de Libros
+        <i class="fa-solid fa-box-archive"></i> Gestión de Libros y Descuentos
       </button>
       <button class="tab-btn" onclick="cambiarPestaña('ubicacion', this)">
         <i class="fa-solid fa-share-nodes"></i> Redes Sociales, QR y Ubicación
@@ -509,12 +553,12 @@
           <p id="stat-disp">0</p>
         </div>
         <div class="stat-card">
-          <h3>Agotados</h3>
-          <p id="stat-agot">0</p>
+          <h3>Con Descuento Activo</h3>
+          <p id="stat-ofertas" style="color: #059669;">0</p>
         </div>
         <div class="stat-card">
-          <h3>Descontinuados</h3>
-          <p id="stat-desc">0</p>
+          <h3>Agotados / Desc.</h3>
+          <p id="stat-agot">0</p>
         </div>
       </div>
 
@@ -536,7 +580,7 @@
           </div>
 
           <div style="margin-bottom: 15px;">
-            <button type="button" class="btn-main" style="background-color: #2980b9; max-width: 250px; font-size: 13px; padding: 8px 12px;" onclick="autocompletarLibroIA()">
+            <button type="button" class="btn-main" style="background-color: #2980b9; color: white; max-width: 260px; font-size: 13px; padding: 8px 12px;" onclick="autocompletarLibroIA()">
               <i class="fa-solid fa-wand-magic-sparkles"></i> Autocompletar con Google Books
             </button>
           </div>
@@ -547,8 +591,50 @@
               <input type="text" id="form-imagen" oninput="actualizarLivePreview(this.value)" required>
             </div>
             <div class="form-group">
-              <label>Precio ($)</label>
-              <input type="number" step="0.50" id="form-precio" required>
+              <label>Estado de Disponibilidad</label>
+              <select id="form-disponible">
+                <option value="true">Disponible</option>
+                <option value="false">Agotado</option>
+                <option value="discontinued">Descontinuado</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- SECCIÓN DE PRECIO Y DESCUENTO AUTOMÁTICO -->
+          <div class="form-row" style="background: #f0fdf4; padding: 15px; border-radius: 8px; border: 1px solid #bbf7d0; margin-bottom: 15px;">
+            <div class="form-group" style="margin-bottom: 0;">
+              <label><i class="fa-solid fa-tag"></i> Precio Final de Venta ($)</label>
+              <input type="number" step="0.50" id="form-precio" placeholder="Ej: 659" oninput="recalcularDescuentoPreview('precio')" required>
+              <small>El precio real que pagará el cliente.</small>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 0;">
+              <label><i class="fa-solid fa-money-bill-transfer"></i> Precio Anterior Tachado ($) (Opcional)</label>
+              <input type="number" step="0.50" id="form-precio-anterior" placeholder="Ej: 999 (Dejar vacío si no hay oferta)" oninput="recalcularDescuentoPreview('anterior')">
+              <small>Si pones $999 y precio final $659, mostrará <strong>34% OFF</strong>.</small>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 0;">
+              <label><i class="fa-solid fa-percent" style="color: #059669;"></i> O % de Descuento Directo (Opcional)</label>
+              <input type="number" min="0" max="95" step="1" id="form-descuento" placeholder="Ej: 34" oninput="recalcularDescuentoPreview('porcentaje')">
+              <small>Calcula el precio tachado automáticamente.</small>
+            </div>
+          </div>
+
+          <!-- VISTA PREVIA EN VIVO DEL PRECIO COMO EN TU IMAGEN -->
+          <div class="discount-preview-card">
+            <div>
+              <strong style="font-size: 13px; color: var(--primary-color); display: block;">
+                <i class="fa-solid fa-eye"></i> Así se verá el precio en el catálogo móvil:
+              </strong>
+              <span style="font-size: 12px; color: #64748b;">Diseño idéntico con precio tachado arriba y % OFF en verde esmeralda.</span>
+            </div>
+            <div class="ml-price-box" id="admin-price-live-preview">
+              <span class="ml-old-price" id="prev-old-price" style="display: none;">$ 999</span>
+              <div class="ml-new-price-row">
+                <span class="ml-current-price" id="prev-current-price">$ 0</span>
+                <span class="ml-discount-tag" id="prev-discount-tag" style="display: none;">34% OFF</span>
+              </div>
             </div>
           </div>
 
@@ -565,17 +651,6 @@
             <div class="form-group">
               <label>Categoría Secundaria (Opcional)</label>
               <input type="text" id="form-categoria2">
-            </div>
-          </div>
-
-          <div class="form-row">
-            <div class="form-group">
-              <label>Estado de Disponibilidad</label>
-              <select id="form-disponible">
-                <option value="true">Disponible</option>
-                <option value="false">Agotado</option>
-                <option value="discontinued">Descontinuado</option>
-              </select>
             </div>
           </div>
 
@@ -596,10 +671,10 @@
           </div>
 
           <div style="display: flex; gap: 10px;">
-            <button type="submit" id="btn-submit-book" class="btn-main" style="max-width: 200px;">
+            <button type="submit" id="btn-submit-book" class="btn-main" style="max-width: 220px;">
               <i class="fa-solid fa-floppy-disk"></i> Guardar Libro
             </button>
-            <button type="button" class="btn-main" style="background-color: #95a5a6; max-width: 150px;" onclick="limpiarFormulario()">
+            <button type="button" class="btn-main" style="background-color: #95a5a6; color: white; max-width: 150px;" onclick="limpiarFormulario()">
               Cancelar
             </button>
           </div>
@@ -620,7 +695,7 @@
                 <th>Portada</th>
                 <th>Título</th>
                 <th>Autor</th>
-                <th>Precio</th>
+                <th>Precio / Oferta</th>
                 <th>Estado</th>
                 <th>Acciones</th>
               </tr>
@@ -650,7 +725,7 @@
 
             <div class="form-group">
               <label><i class="fa-solid fa-clock"></i> HORARIOS DE ATENCIÓN</label>
-              <input type="text" id="admin-horario" placeholder="Ej: Lunes a Sábado - 9:00 AM a 7:30 PM">
+              <input type="text" id="admin-horario" placeholder="Ej: Lunes a Sábado - 11:00 AM a 7:30 PM">
             </div>
           </div>
 
@@ -683,7 +758,7 @@
             <label><i class="fa-solid fa-qrcode"></i> IMAGEN DEL CÓDIGO QR / LOGO (URL O SUBIR DESDE TU PC)</label>
             <div style="display: flex; gap: 10px; flex-wrap: wrap;">
               <input type="text" id="admin-qr-image" placeholder="Pega la URL de la imagen QR o sube un archivo al lado 👉" oninput="actualizarPreviewQR(this.value)" style="flex: 1; min-width: 240px;">
-              <label for="qr-file-upload" class="btn-main" style="background-color: #34495e; width: auto; padding: 10px 15px; font-size: 13px; margin: 0;">
+              <label for="qr-file-upload" class="btn-main" style="background-color: #34495e; color: white; width: auto; padding: 10px 15px; font-size: 13px; margin: 0;">
                 <i class="fa-solid fa-upload"></i> Subir Imagen QR desde mi PC
               </label>
               <input type="file" id="qr-file-upload" accept="image/*" style="display: none;" onchange="convertirImagenQRAuxiliar(event)">
@@ -700,10 +775,10 @@
           </div>
 
           <div style="display: flex; gap: 12px; align-items: center; margin-top: 20px; flex-wrap: wrap;">
-            <button type="submit" id="btn-save-config" class="btn-main" style="max-width: 280px; background-color: var(--success-color);">
+            <button type="submit" id="btn-save-config" class="btn-main" style="max-width: 280px; background-color: var(--success-color); color: white;">
               <i class="fa-solid fa-cloud-arrow-up"></i> Aplicar y Sincronizar Sitio
             </button>
-            <button type="button" class="btn-main" style="max-width: 220px; background-color: #7f8c8d;" onclick="cargarConfigRedesQR(true)">
+            <button type="button" class="btn-main" style="max-width: 220px; background-color: #7f8c8d; color: white;" onclick="cargarConfigRedesQR(true)">
               <i class="fa-solid fa-rotate"></i> Recargar Datos Actuales
             </button>
           </div>
@@ -727,8 +802,8 @@
       <h3><i class="fa-solid fa-triangle-exclamation" style="color: var(--danger-color);"></i> Confirmar Eliminación</h3>
       <p id="delete-modal-text">¿Estás seguro de que deseas eliminar este libro permanentemente?</p>
       <div class="custom-modal-actions">
-        <button class="btn-main" style="background-color: var(--danger-color);" id="btn-confirm-delete">Sí, eliminar</button>
-        <button class="btn-main" style="background-color: #95a5a6;" onclick="cerrarModalEliminar()">Cancelar</button>
+        <button class="btn-main" style="background-color: var(--danger-color); color: white;" id="btn-confirm-delete">Sí, eliminar</button>
+        <button class="btn-main" style="background-color: #95a5a6; color: white;" onclick="cerrarModalEliminar()">Cancelar</button>
       </div>
     </div>
   </div>
@@ -776,7 +851,7 @@
       const container = document.getElementById('toast-container');
       const toast = document.createElement('div');
       toast.className = 'toast';
-      if (tipo === "success") toast.style.backgroundColor = "#27ae60";
+      if (tipo === "success") toast.style.backgroundColor = "#059669";
       if (tipo === "error") toast.style.backgroundColor = "#c0392b";
       toast.innerHTML = `<i class="fa-solid fa-circle-info"></i> <span>${mensaje}</span>`;
       container.appendChild(toast);
@@ -808,6 +883,47 @@
       lanzarToast("Sesión cerrada");
     }
 
+    // CÁLCULO INTELIGENTE EN TIEMPO REAL DE PRECIO TACHADO Y % OFF
+    function recalcularDescuentoPreview(origen) {
+      const inputPrecio = document.getElementById('form-precio');
+      const inputAnterior = document.getElementById('form-precio-anterior');
+      const inputDescuento = document.getElementById('form-descuento');
+
+      const precioActual = parseFloat(inputPrecio.value || 0);
+      let precioAnt = parseFloat(inputAnterior.value || 0);
+      let descPct = parseFloat(inputDescuento.value || 0);
+
+      if (origen === 'anterior' && precioAnt > precioActual && precioActual > 0) {
+        descPct = Math.round(((precioAnt - precioActual) / precioAnt) * 100);
+        inputDescuento.value = descPct;
+      } else if (origen === 'porcentaje' && descPct > 0 && descPct < 95 && precioActual > 0) {
+        precioAnt = Math.round(precioActual / (1 - descPct / 100));
+        inputAnterior.value = precioAnt;
+      } else if (origen === 'precio') {
+        if (precioAnt > precioActual && precioActual > 0) {
+          descPct = Math.round(((precioAnt - precioActual) / precioAnt) * 100);
+          inputDescuento.value = descPct;
+        }
+      }
+
+      const prevOld = document.getElementById('prev-old-price');
+      const prevCurrent = document.getElementById('prev-current-price');
+      const prevTag = document.getElementById('prev-discount-tag');
+
+      prevCurrent.textContent = `$ ${precioActual.toFixed(0)}`;
+
+      if (precioAnt > precioActual && precioActual > 0) {
+        const pctFinal = Math.round(((precioAnt - precioActual) / precioAnt) * 100);
+        prevOld.style.display = 'block';
+        prevOld.textContent = `$ ${precioAnt.toFixed(0)}`;
+        prevTag.style.display = 'inline';
+        prevTag.textContent = `${pctFinal}% OFF`;
+      } else {
+        prevOld.style.display = 'none';
+        prevTag.style.display = 'none';
+      }
+    }
+
     function conectarBaseDeDatos() {
       db.ref('libros').on('value', (snapshot) => {
         const data = snapshot.val();
@@ -824,18 +940,25 @@
 
     function calcularEstadisticasAdmin() {
       let total = misLibros.length;
-      let disponibles = 0; let agotados = 0; let descontinuados = 0;
+      let disponibles = 0;
+      let agotados = 0;
+      let conOferta = 0;
 
       misLibros.forEach(l => {
-        if (l.available === "discontinued") descontinuados++;
-        else if (l.available === false || l.available === "false") agotados++;
-        else disponibles++;
+        if (l.available === "discontinued" || l.available === false || l.available === "false") {
+          agotados++;
+        } else {
+          disponibles++;
+        }
+        if ((parseFloat(l.precioAnterior || 0) > parseFloat(l.precio || 0)) || parseFloat(l.descuento || 0) > 0) {
+          conOferta++;
+        }
       });
 
       document.getElementById('stat-total').innerText = total;
       document.getElementById('stat-disp').innerText = disponibles;
+      document.getElementById('stat-ofertas').innerText = conOferta;
       document.getElementById('stat-agot').innerText = agotados;
-      document.getElementById('stat-desc').innerText = descontinuados;
     }
 
     function actualizarLivePreview(url) {
@@ -848,7 +971,6 @@
       img.src = url ? url.trim() : "https://via.placeholder.com/120x120?text=Sin+QR";
     }
 
-    // Si el usuario pega todo el código <iframe src="..."></iframe> de Google Maps, extrae solo el enlace src
     function limpiarIframeMapa(inputElement) {
       const val = inputElement.value.trim();
       if (val.includes('<iframe') && val.includes('src=')) {
@@ -860,7 +982,6 @@
       }
     }
 
-    // Permite subir una imagen QR local desde la PC convirtiéndola en DataURL optimizado
     function convertirImagenQRAuxiliar(event) {
       const file = event.target.files[0];
       if (!file) return;
@@ -955,14 +1076,29 @@
       listaMostrar.forEach((libro) => {
         const indexOriginal = misLibros.findIndex(m => m.idFirebase === libro.idFirebase);
         
-        let estaDisponible = libro.available === true || libro.available === "true";
+        let estaDisponible = libro.available === true || libro.available === "true" || libro.estado === "Disponible";
         let badgeHtml = '';
         if (libro.available === "discontinued") {
           badgeHtml = `<span class="tbl-badge desc">Descontinuado</span>`;
-        } else if (estaDisponible) {
+        } else if (estaDisponible && libro.available !== false && libro.available !== "false") {
           badgeHtml = `<span class="tbl-badge disp">Disponible</span>`;
         } else {
           badgeHtml = `<span class="tbl-badge agot">Agotado</span>`;
+        }
+
+        const pActual = parseFloat(libro.precio || 0);
+        const pAnt = parseFloat(libro.precioAnterior || 0);
+        const desc = parseFloat(libro.descuento || 0);
+        let celdaPrecioHtml = `<strong>$${pActual.toFixed(0)}</strong>`;
+
+        if (pAnt > pActual && pActual > 0) {
+          const pct = Math.round(((pAnt - pActual) / pAnt) * 100);
+          celdaPrecioHtml = `
+            <span style="text-decoration:line-through; color:#9ca3af; font-size:11px; display:block;">$${pAnt.toFixed(0)}</span>
+            <strong>$${pActual.toFixed(0)}</strong> <span style="color:#059669; font-weight:700; font-size:12px;">${pct}% OFF</span>
+          `;
+        } else if (desc > 0) {
+          celdaPrecioHtml = `<strong>$${pActual.toFixed(0)}</strong> <span style="color:#059669; font-weight:700; font-size:12px;">${desc}% OFF</span>`;
         }
 
         const tr = document.createElement('tr');
@@ -970,11 +1106,11 @@
           <td><img src="${libro.imagen || 'https://via.placeholder.com/40x55'}" class="tbl-thumb" onerror="this.src='https://via.placeholder.com/40x55'"></td>
           <td><strong>${libro.titulo || 'Sin título'}</strong></td>
           <td>${libro.autor || 'Sin autor'}</td>
-          <td>$${libro.precio || 0}</td>
+          <td>${celdaPrecioHtml}</td>
           <td>${badgeHtml}</td>
           <td class="action-btns">
             <button class="toggle-disp-btn" title="Cambiar Estado Rápido" onclick="conmutarEstadoRapido('${libro.idFirebase}', ${estaDisponible})"><i class="fa-solid fa-arrows-rotate"></i></button>
-            <button class="edit-btn" title="Editar" onclick="cargarLibroEnFormulario(${indexOriginal})"><i class="fa-solid fa-pen"></i></button>
+            <button class="edit-btn" title="Editar Precio / Descuento" onclick="cargarLibroEnFormulario(${indexOriginal})"><i class="fa-solid fa-pen"></i></button>
             <button class="delete-btn" title="Eliminar" onclick="solicitarEliminarLibro('${libro.idFirebase}')"><i class="fa-solid fa-trash"></i></button>
           </td>
         `;
@@ -984,7 +1120,11 @@
 
     function conmutarEstadoRapido(idFirebase, estadoActual) {
       if (!adminAutenticado) return;
-      db.ref('libros/' + idFirebase + '/available').set(!estadoActual).then(() => {
+      const nuevoValor = !estadoActual;
+      db.ref('libros/' + idFirebase).update({
+        available: nuevoValor,
+        estado: nuevoValor ? 'Disponible' : 'Agotado'
+      }).then(() => {
         lanzarToast("Estado actualizado correctamente", "success");
       });
     }
@@ -1008,29 +1148,36 @@
       statusText.innerText = "Preparando datos del libro...";
       
       const intervaloSimulacion = setInterval(() => {
-        progreso += 10;
+        progreso += 15;
         if (progreso <= 90) {
           barFill.style.width = progreso + '%';
           percentageText.innerText = progreso + '%';
-          if (progreso === 40) statusText.innerText = "Conectando con Firebase...";
-          else if (progreso === 70) statusText.innerText = "Subiendo información y portada...";
         }
-      }, 100);
+      }, 90);
 
       const valorDisp = document.getElementById('form-disponible').value;
       let valorGuardarDisp = valorDisp;
-      if (valorDisp === "true") valorGuardarDisp = true;
-      if (valorDisp === "false") valorGuardarDisp = false;
+      let textoEstado = "Disponible";
+      if (valorDisp === "true") { valorGuardarDisp = true; textoEstado = "Disponible"; }
+      else if (valorDisp === "false") { valorGuardarDisp = false; textoEstado = "Agotado"; }
+      else { textoEstado = "Descontinuado"; }
+
+      const precioFinal = parseFloat(document.getElementById('form-precio').value || 0);
+      const precioAntInput = parseFloat(document.getElementById('form-precio-anterior').value || 0);
+      const descInput = parseFloat(document.getElementById('form-descuento').value || 0);
 
       const nuevoLibro = {
         titulo: document.getElementById('form-titulo').value.trim(),
         autor: document.getElementById('form-autor').value.trim(),
         imagen: document.getElementById('form-imagen').value.trim(),
         resumen: document.getElementById('form-resumen').value.trim(),
-        precio: parseFloat(document.getElementById('form-precio').value),
+        precio: precioFinal,
+        precioAnterior: precioAntInput > precioFinal ? precioAntInput : null,
+        descuento: descInput > 0 ? descInput : null,
         categoria: document.getElementById('form-categoria').value.trim(),
         categoria2: document.getElementById('form-categoria2').value.trim() || "",
-        available: valorGuardarDisp
+        available: valorGuardarDisp,
+        estado: textoEstado
       };
 
       const operacionFirebase = idFirebase === "" 
@@ -1049,8 +1196,8 @@
           submitBtn.disabled = false;
           submitBtn.style.opacity = '1';
           limpiarFormulario();
-          lanzarToast(idFirebase === "" ? "Nuevo libro agregado" : "Libro modificado con éxito", "success");
-        }, 600);
+          lanzarToast(idFirebase === "" ? "Nuevo libro agregado" : "Libro y descuento actualizados", "success");
+        }, 500);
       }).catch(() => {
         clearInterval(intervaloSimulacion);
         progressBox.style.display = 'none';
@@ -1071,9 +1218,13 @@
       document.getElementById('form-live-img').src = libro.imagen || "https://via.placeholder.com/140x200?text=Sin+Portada";
       document.getElementById('form-resumen').value = libro.resumen || "";
       document.getElementById('form-precio').value = libro.precio || 0;
+      document.getElementById('form-precio-anterior').value = libro.precioAnterior || "";
+      document.getElementById('form-descuento').value = libro.descuento || "";
       document.getElementById('form-categoria').value = libro.categoria || "";
       document.getElementById('form-categoria2').value = libro.categoria2 || "";
       
+      recalcularDescuentoPreview('precio');
+
       document.getElementById('panel-title').innerHTML = `<i class="fa-solid fa-pen-to-square"></i> Editando: ${libro.titulo}`;
 
       if (libro.available === true || libro.available === "true") {
@@ -1081,7 +1232,7 @@
       } else if (libro.available === false || libro.available === "false") {
         document.getElementById('form-disponible').value = "false";
       } else {
-        document.getElementById('form-disponible').value = libro.available; 
+        document.getElementById('form-disponible').value = libro.available || "true"; 
       }
       
       document.getElementById('admin-panel').scrollTo({ top: 0, behavior: 'smooth' });
@@ -1093,6 +1244,7 @@
       document.getElementById('form-live-img').src = "https://via.placeholder.com/140x200?text=Sin+Portada";
       document.getElementById('panel-title').innerHTML = `<i class="fa-solid fa-plus-circle"></i> Agregar Nuevo Libro`;
       document.getElementById('upload-progress-box').style.display = 'none';
+      recalcularDescuentoPreview('precio');
     }
 
     function solicitarEliminarLibro(idFirebase) {
@@ -1122,10 +1274,6 @@
       });
     });
 
-    // =========================================================================
-    // SOLUCIÓN AL PROBLEMA DE REDES SOCIALES, UBICACIÓN Y CÓDIGO QR
-    // =========================================================================
-
     function normalizarUrlRedSocial(url) {
       const limpia = (url || "").trim();
       if (!limpia) return "";
@@ -1151,37 +1299,24 @@
       const instagramVal = normalizarUrlRedSocial(document.getElementById('admin-instagram').value);
       const qrVal = document.getElementById('admin-qr-image').value.trim();
 
-      // Si pegaron un <iframe> completo, extraemos el src limpio
       if (mapaVal.includes('<iframe') && mapaVal.includes('src=')) {
         const match = mapaVal.match(/src=["']([^"']+)["']/i);
         if (match && match[1]) mapaVal = match[1];
       }
 
-      // Formatear WhatsApp tanto en URL wa.me como en número puro para que funcione sin importar cómo lo lea la tienda
       const soloNumerosWA = rawWhatsapp.replace(/\D/g, '');
       const whatsappUrl = rawWhatsapp.startsWith('http') 
         ? rawWhatsapp 
         : (soloNumerosWA ? `https://wa.me/${soloNumerosWA}` : rawWhatsapp);
 
-      // Guardamos todos los alias de nombres posibles que la página oficial puede estar buscando
       const configCompleta = {
-        // Dirección y Horario
         direccion: direccionVal,
         ubicacion: direccionVal,
-        address: direccionVal,
         horario: horarioVal,
         horarios: horarioVal,
-        schedule: horarioVal,
-
-        // Mapa (incluyendo iframeMap que usa script.js)
         iframeMap: mapaVal,
         mapaUrl: mapaVal,
         mapa: mapaVal,
-        mapUrl: mapaVal,
-        iframeMapa: mapaVal,
-        googleMaps: mapaVal,
-
-        // Redes Sociales
         whatsapp: whatsappUrl,
         whatsappNumero: soloNumerosWA || rawWhatsapp,
         telefono: soloNumerosWA || rawWhatsapp,
@@ -1191,31 +1326,17 @@
         instagram: instagramVal,
         ig: instagramVal,
         instagramUrl: instagramVal,
-
-        // Código QR / Logo
         qr: qrVal,
         qrImage: qrVal,
         qrUrl: qrVal,
-        codigoQr: qrVal,
-        imagenQr: qrVal,
-        logoQr: qrVal,
-
-        // Marca de tiempo para forzar actualización en los clientes conectados
         ultimaActualizacion: Date.now()
       };
 
-      // Guardamos en 'configuracion' y también en 'config' por si el sitio principal escucha cualquiera de los dos
       Promise.all([
         db.ref('configuracion').update(configCompleta),
         db.ref('config').update(configCompleta)
       ])
       .then(() => {
-        // También limpiamos posible caché viejo en el navegador local
-        try {
-          localStorage.removeItem('configuracion_milenium');
-          localStorage.removeItem('siteConfig');
-        } catch (e) {}
-
         btnSave.disabled = false;
         btnSave.innerHTML = `<i class="fa-solid fa-cloud-arrow-up"></i> Aplicar y Sincronizar Sitio`;
         lanzarToast("¡Redes, QR y Ubicación sincronizados en la página oficial!", "success");
@@ -1257,8 +1378,8 @@
         const config = snapshot.val();
         if (config) {
           document.getElementById('admin-direccion').value = config.direccion || config.ubicacion || '';
-          document.getElementById('admin-mapa').value = config.mapaUrl || config.mapa || '';
-          document.getElementById('admin-horario').value = config.horario || '';
+          document.getElementById('admin-mapa').value = config.iframeMap || config.mapaUrl || config.mapa || '';
+          document.getElementById('admin-horario').value = config.horarios || config.horario || '';
           document.getElementById('admin-whatsapp').value = config.whatsapp || '';
           document.getElementById('admin-facebook').value = config.facebook || '';
           document.getElementById('admin-instagram').value = config.instagram || '';
